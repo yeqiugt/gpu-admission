@@ -120,6 +120,7 @@ func (gpuFilter *GPUFilter) Filter(
 
 //deviceFilter will choose one and only one node fullfil the request,
 //so it should always be the last filter of gpuFilter
+// mark, liulijin, GPU分配
 func (gpuFilter *GPUFilter) deviceFilter(
 	pod *corev1.Pod, nodes []corev1.Node) ([]corev1.Node, extenderv1.FailedNodesMap, error) {
 	// #lizard forgives
