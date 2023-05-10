@@ -1,4 +1,4 @@
-FROM centos:7 as build
+FROM nvidia/cuda:10.1-devel-centos7 as build
 
 ARG version
 ARG commit
