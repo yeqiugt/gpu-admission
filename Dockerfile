@@ -11,6 +11,7 @@ RUN curl -sSL https://dl.google.com/go/go${GOLANG_VERSION}.linux-amd64.tar.gz \
 ENV GOPATH /go
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
+ENV GOPROXY https://goproxy.cn
 RUN mkdir -p /root/rpmbuild/{SPECS,SOURCES}
 
 COPY gpu-admission.spec /root/rpmbuild/SPECS
