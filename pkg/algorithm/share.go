@@ -17,6 +17,7 @@
 package algorithm
 
 import (
+	"fmt"
 	"sort"
 
 	"k8s.io/klog"
@@ -52,9 +53,19 @@ func (al *shareMode) Evaluate(cores uint, memory uint) []*device.DeviceInfo {
 	}
 
 	sorter.Sort(tmpStore)
+	inUseDev := GetInUseDevice()
 
 	for _, dev := range tmpStore {
 		if dev.AllocatableCores() >= cores && dev.AllocatableMemory() >= memory {
+			if IsMig(dev.GetID()) {
+				fmt.Println("gpu enabel mig : ", dev.GetID())
+				continue
+			}
+			if _, ok := inUseDev[dev.GetID()]; ok {
+				fmt.Println("gpu be used by nvidia : ", dev.GetID())
+				continue
+			}
+
 			klog.V(4).Infof("Pick up %d , cores: %d, memory: %d",
 				dev.GetID(), dev.AllocatableCores(), dev.AllocatableMemory())
 			devs = append(devs, dev)
