@@ -135,6 +135,9 @@ func IsMig(index int, nodeName string) bool {
 	if val, ok := label[migLbale]; ok {
 		fmt.Println("miglabel: ", migLbale)
 		fmt.Println("val : ", val)
+		if val == "disabled" {
+			return false
+		}
 		return true
 	}
 	return false
