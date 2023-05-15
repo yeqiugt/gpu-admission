@@ -20,7 +20,6 @@ package algorithm
 import (
 	"context"
 	"fmt"
-	nvml2 "github.com/NVIDIA/go-nvml/pkg/nvml"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -29,7 +28,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -64,14 +62,14 @@ const (
 	NvidiaDevicePrefix = "/dev/nvidia"
 )
 
-func GetInUseDevice() map[int]bool {
+func GetInUseDevice(nodeName string) map[int]bool {
 
 	// 4. 获取nvidia占用的设备
-	k8sclient, hostname, err := GetClientAndHostName()
+	k8sclient, _, err := GetClientAndHostName()
 	if err != nil {
 		fmt.Println("GetClientAndHostName err", err)
 	}
-	inUsedDev, err := GetNvidiaDevice(k8sclient, hostname)
+	inUsedDev, err := GetNvidiaDevice(k8sclient, nodeName)
 	if err != nil {
 		fmt.Println("GetNvidiaDevice err", err)
 	}
@@ -91,47 +89,68 @@ func GetInUseDevice() map[int]bool {
 
 }
 
-func IsMig(index int) bool {
-	fmt.Println("determined is mig, gpu index: ", index)
-	ret := nvml2.Init()
-	if ret != nvml2.SUCCESS {
-		fmt.Println("nvlib init err")
-	}
-	defer func() {
-		ret := nvml2.Shutdown()
-		if ret != nvml2.SUCCESS {
-			fmt.Println("Error shutting down NVML: %v", ret)
-		}
-	}()
+//func IsMig(index int) bool {
+//	fmt.Println("determined is mig, gpu index: ", index)
+//	ret := nvml2.Init()
+//	if ret != nvml2.SUCCESS {
+//		fmt.Println("nvlib init err")
+//	}
+//	defer func() {
+//		ret := nvml2.Shutdown()
+//		if ret != nvml2.SUCCESS {
+//			fmt.Println("Error shutting down NVML: %v", ret)
+//		}
+//	}()
+//
+//	handle, ret := nvml2.DeviceGetHandleByIndex(index)
+//	if ret != nvml2.SUCCESS {
+//		fmt.Println("DeviceGetHandleByIndex err, index: ", index, ret)
+//	}
+//	currentMode, PendingMode, ret := handle.GetMigMode()
+//	fmt.Println("currentMode: ", currentMode, " PendingMode: ", PendingMode)
+//	if ret != nvml2.SUCCESS {
+//		fmt.Println("DeviceGetHandleByIndex err, index: ", index, ret)
+//	}
+//	if currentMode == nvml2.DEVICE_MIG_ENABLE {
+//		fmt.Println("gpu index", index, " is mig ", true)
+//		return true
+//	}
+//	fmt.Println("gpu index", index, " is mig ", false)
+//	return false
+//}
 
-	handle, ret := nvml2.DeviceGetHandleByIndex(index)
-	if ret != nvml2.SUCCESS {
-		fmt.Println("DeviceGetHandleByIndex err, index: ", index, ret)
+func IsMig(index int, nodeName string) bool {
+	client, _, err := GetClientAndHostName()
+	if err != nil {
+		fmt.Println("is mig err: ", err)
+		return false
 	}
-	currentMode, PendingMode, ret := handle.GetMigMode()
-	fmt.Println("currentMode: ", currentMode, " PendingMode: ", PendingMode)
-	if ret != nvml2.SUCCESS {
-		fmt.Println("DeviceGetHandleByIndex err, index: ", index, ret)
+	node, err := client.CoreV1().Nodes().Get(context.Background(), nodeName, metav1.GetOptions{})
+	if err != nil {
+		fmt.Println("get node err: ", err)
+		return false
 	}
-	if currentMode == nvml2.DEVICE_MIG_ENABLE {
-		fmt.Println("gpu index", index, " is mig ", true)
+	label := node.Labels
+	migLbale := fmt.Sprintf("inspur.com/miginfo.gpuid.%d", index)
+	if val, ok := label[migLbale]; ok {
+		fmt.Println("miglabel: ", migLbale)
+		fmt.Println("val : ", val)
 		return true
 	}
-	fmt.Println("gpu index", index, " is mig ", false)
 	return false
 }
 
 func GetNvidiaDevice(client kubernetes.Interface, hostname string) ([]string, error) {
-	ret := nvml2.Init()
-	if ret != nvml2.SUCCESS {
-		fmt.Println("nvlib init err")
-	}
-	defer func() {
-		ret := nvml2.Shutdown()
-		if ret != nvml2.SUCCESS {
-			fmt.Println("Error shutting down NVML: %v", ret)
-		}
-	}()
+	//ret := nvml2.Init()
+	//if ret != nvml2.SUCCESS {
+	//	fmt.Println("nvlib init err")
+	//}
+	//defer func() {
+	//	ret := nvml2.Shutdown()
+	//	if ret != nvml2.SUCCESS {
+	//		fmt.Println("Error shutting down NVML: %v", ret)
+	//	}
+	//}()
 	allPods, err := getPodsOnNode(client, hostname, string(v1.PodRunning))
 	//fmt.Println("all  pods :")
 	//for _, pod := range allPods {
@@ -241,13 +260,13 @@ func GetClientAndHostName() (*kubernetes.Clientset, string, error) {
 		fmt.Println("getConfig err ", err)
 		return &kubernetes.Clientset{}, "", err
 	}
-	hostname, _ := os.Hostname()
-	gpuManagerPod, err := k8sclient.CoreV1().Pods("kube-system").Get(context.Background(), hostname, metav1.GetOptions{})
-	if err != nil {
-		fmt.Println("get gpumanager pod err: ", err)
-		return nil, "", err
-	}
-	nodeName := gpuManagerPod.Spec.NodeName
-	return k8sclient, nodeName, nil
+	//hostname, _ := os.Hostname()
+	//gpuManagerPod, err := k8sclient.CoreV1().Pods("kube-system").Get(context.Background(), hostname, metav1.GetOptions{})
+	//if err != nil {
+	//	fmt.Println("get gpumanager pod err: ", err)
+	//	return nil, "", err
+	//}
+	//nodeName := gpuManagerPod.Spec.NodeName
+	return k8sclient, "", nil
 
 }

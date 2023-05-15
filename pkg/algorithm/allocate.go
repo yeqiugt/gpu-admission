@@ -91,6 +91,7 @@ func (alloc *allocator) AllocateOne(container *v1.Container) ([]*device.DeviceIn
 		vcore, vmemory uint
 	)
 	node := alloc.nodeInfo.GetNode()
+	node.GetName()
 	nodeTotalMemory := util.GetCapacityOfNode(node, util.VMemoryAnnotation)
 	deviceCount := util.GetGPUDeviceCountOfNode(node)
 	deviceTotalMemory := uint(nodeTotalMemory / deviceCount)
@@ -99,7 +100,7 @@ func (alloc *allocator) AllocateOne(container *v1.Container) ([]*device.DeviceIn
 
 	switch {
 	case needCores < util.HundredCore:
-		devs = NewShareMode(alloc.nodeInfo).Evaluate(needCores, needMemory)
+		devs = NewShareMode(alloc.nodeInfo).Evaluate(needCores, needMemory, node.Name)
 		sharedMode = true
 	default:
 		devs = NewExclusiveMode(alloc.nodeInfo).Evaluate(needCores, needMemory)

@@ -40,7 +40,7 @@ func NewShareMode(n *device.NodeInfo) *shareMode {
 	return &shareMode{n}
 }
 
-func (al *shareMode) Evaluate(cores uint, memory uint) []*device.DeviceInfo {
+func (al *shareMode) Evaluate(cores uint, memory uint, nodeName string) []*device.DeviceInfo {
 	var (
 		devs        []*device.DeviceInfo
 		deviceCount = al.node.GetDeviceCount()
@@ -53,11 +53,11 @@ func (al *shareMode) Evaluate(cores uint, memory uint) []*device.DeviceInfo {
 	}
 
 	sorter.Sort(tmpStore)
-	inUseDev := GetInUseDevice()
+	inUseDev := GetInUseDevice(nodeName)
 
 	for _, dev := range tmpStore {
 		if dev.AllocatableCores() >= cores && dev.AllocatableMemory() >= memory {
-			if IsMig(dev.GetID()) {
+			if IsMig(dev.GetID(), nodeName) {
 				fmt.Println("gpu enabel mig : ", dev.GetID())
 				continue
 			}
