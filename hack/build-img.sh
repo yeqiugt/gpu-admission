@@ -64,6 +64,7 @@ function api::build::generate() {
     docker build -t $IMAGE \
       --build-arg version=${VERSION} \
       --build-arg commit=${GITCOMMIT} \
+      -f ./Dockerfile.amd \
       .
   )
 }

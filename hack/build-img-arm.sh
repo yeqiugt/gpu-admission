@@ -65,6 +65,7 @@ function api::build::generate() {
     docker buildx build -t $IMAGE \
       --build-arg version=${VERSION} \
       --build-arg commit=${GITCOMMIT} \
+      -f ./Dockerfile.arm \
       --platform=linux/arm64 --progress=plain -o type=docker .
   )
 }
@@ -77,5 +78,3 @@ else
 fi
 api::build::prepare_build
 api::build::generate
-
-# vim: set ts=2 sw=2 tw=0 et :
