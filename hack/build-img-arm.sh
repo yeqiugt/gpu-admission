@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # RPM package deployment
@@ -78,3 +77,5 @@ else
 fi
 api::build::prepare_build
 api::build::generate
+
+# vim: set ts=2 sw=2 tw=0 et :
