@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 # RPM package deployment
@@ -54,17 +55,17 @@ function api::build::prepare_build() {
   "${TAR}" czf "${LOCAL_OUTPUT_ROOT}/gpu-admission-source.tar.gz" --transform 's,^,/gpu-admission-'$VERSION'/,' $(api::build::source_targets)
 
   cp -R "${ROOT}/build/gpu-admission.spec" "${LOCAL_OUTPUT_ROOT}"
-  cp "${ROOT}/Dockerfile.amd" "${LOCAL_OUTPUT_ROOT}"
+  cp "${ROOT}/Dockerfile.arm" "${LOCAL_OUTPUT_ROOT}"
 }
 
 function api::build::generate() {
   api::log::status "Generating image..."
   (
     cd "${LOCAL_OUTPUT_ROOT}"
-    docker build -t $IMAGE \
+    docker buildx build -t $IMAGE \
       --build-arg version=${VERSION} \
       --build-arg commit=${GITCOMMIT} \
-      .
+      --platform=linux/arm64 --progress=plain -o type=docker .
   )
 }
 

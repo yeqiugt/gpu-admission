@@ -23,6 +23,10 @@ verify:
 .PHONY: img
 img:
 	hack/build-img.sh
+.PHONY: img-arm
+img:
+	hack/build-img-arm.sh
+
 
 format:
 	hack/format.sh
