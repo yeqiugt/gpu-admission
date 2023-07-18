@@ -1,4 +1,4 @@
-FROM nvidia/cuda:10.1-devel-centos7 as build
+FROM nvidia/cuda:11.0.3-devel-ubi8 as build
 
 ARG version
 ARG commit
@@ -32,9 +32,9 @@ FROM centos:7
 ARG version
 ARG commit
 
-COPY --from=build /root/rpmbuild/RPMS/x86_64/gpu-admission-${version}-${commit}.el7.x86_64.rpm /tmp
+COPY --from=build /root/rpmbuild/RPMS/x86_64/gpu-admission-${version}-${commit}.el8.x86_64.rpm /tmp
 
-RUN rpm -ivh /tmp/gpu-admission-${version}-${commit}.el7.x86_64.rpm
+RUN rpm -ivh /tmp/gpu-admission-${version}-${commit}.el8.x86_64.rpm
 
 EXPOSE 3456
 
